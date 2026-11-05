@@ -3,13 +3,50 @@ on:
   push:
   pull_request:
 jobs:
-  test:
+  sqlite-and-postgres:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quality
+          POSTGRES_PASSWORD: quality_test_password
+          POSTGRES_DB: quality
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quality -d quality"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://quality:quality_test_password@localhost:5432/quality
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m src.generate_demo_data
-      - run: python -m src.pipeline
-      - run: python -m unittest discover -s tests -v
+      - name: Install PostgreSQL driver
+        run: pip install "psycopg[binary]"
+      - name: Generate synthetic data
+        run: python -m src.generate_demo_data
+      - name: Validate and build SQLite exports
+        run: python -m src.pipeline
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: PostgreSQL initial load
+        run: python -m src.postgres_loader
+      - name: PostgreSQL repeat load
+        run: python -m src.postgres_loader
+      - name: Check PostgreSQL row counts
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+          expected = {"aircraft":120,"inspections":960,"findings":365,"actions":314,"milestones":360}
+          with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+              for table, count in expected.items():
+                  result = conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+                  assert result == count, (table, result, count)
+          print("PostgreSQL counts match after repeated upsert")
+          PY
