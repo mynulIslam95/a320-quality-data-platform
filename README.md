@@ -48,7 +48,7 @@ Identifiers such as `SIM-MSN-10042` are invented. All sites, dates, findings and
 
 ## Next steps
 
-Google Workspace reporting, PostgreSQL integration tests and scheduled incremental ingestion are not implemented yet. The planned Quality Control Tower and Gemini RAG projects will use the same versioned data contract.
+Google Sheets report generation and an optional weekly refresh trigger are implemented in `google_apps_script/Code.gs`. The script requires a manual CSV import and Google account authorization. Its report calculations have a mock-based Node.js test, but the Google Workspace integration has not been exercised in a live Sheet. GitHub Actions is configured to run a PostgreSQL service and check repeat-load row counts; a successful workflow run has not yet been verified. Scheduled incremental ingestion is not implemented. The planned Quality Control Tower and Gemini RAG projects will use the same versioned data contract.
 
 ## Notes
 
