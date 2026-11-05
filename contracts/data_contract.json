@@ -1,0 +1,45 @@
+{
+  "contract_version": "1.0.0",
+  "dataset": "synthetic_a320_quality",
+  "classification": "fictional_portfolio_data",
+  "primary_entity": "aircraft_id",
+  "aircraft_id_pattern": "^SIM-MSN-[0-9]{5}$",
+  "tables": {
+    "aircraft": {
+      "primary_key": "aircraft_id"
+    },
+    "inspections": {
+      "primary_key": "inspection_id",
+      "foreign_keys": {
+        "aircraft_id": "aircraft.aircraft_id"
+      }
+    },
+    "findings": {
+      "primary_key": "finding_id",
+      "foreign_keys": {
+        "inspection_id": "inspections.inspection_id"
+      }
+    },
+    "actions": {
+      "primary_key": "action_id",
+      "foreign_keys": {
+        "finding_id": "findings.finding_id"
+      }
+    },
+    "milestones": {
+      "primary_key": "milestone_id",
+      "foreign_keys": {
+        "aircraft_id": "aircraft.aircraft_id"
+      }
+    }
+  },
+  "exports": {
+    "summary": "data/processed/aircraft_quality_summary.csv",
+    "database": "data/processed/quality.db",
+    "validation": "data/processed/quality_report.json"
+  },
+  "consumers": [
+    "a320-quality-control-tower",
+    "a320-quality-intelligence-rag"
+  ]
+}
