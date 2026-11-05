@@ -37,6 +37,7 @@ const spreadsheet = {
 const context = {
   SpreadsheetApp: {getActiveSpreadsheet() {return spreadsheet;}},
   ScriptApp: {},
+  PropertiesService: {getScriptProperties() {return {getProperty() {return null;}};}},
   Date,
   Object,
   Number,
