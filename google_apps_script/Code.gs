@@ -6,8 +6,26 @@
  */
 const SOURCE_SHEET = 'Quality Summary';
 const REPORT_SHEET = 'Weekly Report';
+// Set this Script Property to a Google Drive CSV file ID for unattended imports.
+const DRIVE_CSV_PROPERTY = 'QUALITY_SUMMARY_CSV_FILE_ID';
+
+/** Refresh imported source rows from an optional Google Drive CSV file. */
+function importLatestCsvFromDrive() {
+  const fileId = PropertiesService.getScriptProperties().getProperty(DRIVE_CSV_PROPERTY);
+  if (!fileId) return false; // Existing manually imported data remains valid.
+  const csv = DriveApp.getFileById(fileId).getBlob().getDataAsString('UTF-8');
+  const values = Utilities.parseCsv(csv);
+  if (values.length < 2) throw new Error('Drive CSV has no data rows.');
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(SOURCE_SHEET) || spreadsheet.insertSheet(SOURCE_SHEET);
+  sheet.clearContents();
+  sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+  return true;
+}
+
 
 function refreshQualityReport() {
+  importLatestCsvFromDrive();
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const source = spreadsheet.getSheetByName(SOURCE_SHEET);
   if (!source) throw new Error('Missing "Quality Summary" sheet. Import aircraft_quality_summary.csv first.');
